@@ -5,6 +5,13 @@
 // would freeze every goroutine in this node's WASM instance (see
 // ../../bil/STRATEGY.md's "Emulator architecture" note, and the
 // ../spike/ that proved this mechanism).
+//
+// Links are addressed by plain index, not compass-direction names --
+// this 2D-mesh topology's own convention is slot 0=north, 1=east,
+// 2=south, 3=west (see static/index.html's buildTopology), but that
+// mapping lives entirely here and in the page; node programs (and the
+// bilink Go package) just see link[i] and don't know or care what
+// topology assigned it. A boundary node simply has some slots absent.
 
 const STATE = 0; // int32 index: 0=idle, 1=data-ready, 2=consumed
 const PAYLOAD = 1; // int32 index: the transferred value
@@ -23,7 +30,7 @@ self.onerror = (e) => {
   postMessage({ type: "error", row: self.bilRow, col: self.bilCol, text: e.message });
 };
 
-let views = {}; // { north: {out, in}, east: {...}, ... } of Int32Array, only wired directions present
+let views = []; // views[i] = {out, in} of Int32Array, or undefined if slot i isn't wired
 
 // Atomics.waitAsync only guarantees "the value changed since it was
 // last known to equal the value passed in" -- not that it became any
@@ -46,19 +53,19 @@ function waitUntil(view, idx, target, cb) {
   attempt();
 }
 
-function requireLink(dirName) {
-  const link = views[dirName];
+function requireLink(i) {
+  const link = views[i];
   if (!link) {
     throw new Error(
-      `node (${self.bilRow},${self.bilCol}) is not wired in direction "${dirName}" -- ` +
-      `check the node program is using the right compass direction for its position`
+      `node (${self.bilRow},${self.bilCol}) has no link[${i}] wired -- ` +
+      `check the node program is using a valid index for its position`
     );
   }
   return link;
 }
 
-self.linkSend = function (dirName, value, cb) {
-  const view = requireLink(dirName).out;
+self.linkSend = function (i, value, cb) {
+  const view = requireLink(i).out;
   waitUntil(view, STATE, IDLE, () => {
     Atomics.store(view, PAYLOAD, value);
     Atomics.store(view, STATE, DATA_READY);
@@ -71,8 +78,8 @@ self.linkSend = function (dirName, value, cb) {
   });
 };
 
-self.linkRecv = function (dirName, cb) {
-  const view = requireLink(dirName).in;
+self.linkRecv = function (i, cb) {
+  const view = requireLink(i).in;
   waitUntil(view, STATE, DATA_READY, () => {
     const v = Atomics.load(view, PAYLOAD);
     Atomics.store(view, STATE, CONSUMED);
@@ -91,14 +98,11 @@ self.onmessage = (e) => {
   self.bilCol = msg.col;
   self.bilRows = msg.rows;
   self.bilCols = msg.cols;
+  self.bilNumLinks = msg.links.length;
 
-  views = {};
-  for (const dir of ["north", "east", "south", "west"]) {
-    const link = msg.links[dir];
-    if (link) {
-      views[dir] = { out: new Int32Array(link.out), in: new Int32Array(link.in) };
-    }
-  }
+  views = msg.links.map((link) =>
+    link ? { out: new Int32Array(link.out), in: new Int32Array(link.in) } : undefined
+  );
 
   importScripts("wasm_exec.js");
   const go = new Go();

@@ -83,24 +83,31 @@
   }
 
   // Plain mesh, not torus: edge/corner nodes simply have fewer wired
-  // directions, matching real transputer board wiring.
+  // slots, matching real transputer board wiring. Link addressing is
+  // by plain index, not compass name -- this topology's own fixed
+  // convention is slot 0=north, 1=east, 2=south, 3=west. A node
+  // program (and the bilink Go package) never sees these names, only
+  // link[i]; what each index means is owned entirely by this function.
+  const NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
+  const NUM_LINKS = 4;
+
   function buildTopology(rows, cols) {
     const nodeLinks = Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => ({}))
+      Array.from({ length: cols }, () => new Array(NUM_LINKS).fill(undefined))
     );
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols - 1; c++) {
         const { ab, ba } = makeLinkPair(); // ab: (r,c)->(r,c+1), ba: (r,c+1)->(r,c)
-        nodeLinks[r][c].east = { out: ab, in: ba };
-        nodeLinks[r][c + 1].west = { out: ba, in: ab };
+        nodeLinks[r][c][EAST] = { out: ab, in: ba };
+        nodeLinks[r][c + 1][WEST] = { out: ba, in: ab };
       }
     }
     for (let r = 0; r < rows - 1; r++) {
       for (let c = 0; c < cols; c++) {
         const { ab, ba } = makeLinkPair(); // ab: (r,c)->(r+1,c), ba: (r+1,c)->(r,c)
-        nodeLinks[r][c].south = { out: ab, in: ba };
-        nodeLinks[r + 1][c].north = { out: ba, in: ab };
+        nodeLinks[r][c][SOUTH] = { out: ab, in: ba };
+        nodeLinks[r + 1][c][NORTH] = { out: ba, in: ab };
       }
     }
     return nodeLinks;

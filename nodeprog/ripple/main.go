@@ -1,8 +1,15 @@
 // ripple is the Phase A substrate proof: a counter travels east along
 // each row, reflects at the last column, and travels back west. Every
-// node uses exactly one link direction at a time, so this exercises
-// the real blocking rendezvous end-to-end without also needing
-// multi-way alt (see ../../README.md).
+// node uses exactly one link at a time, so this exercises the real
+// blocking rendezvous end-to-end without also needing multi-way alt
+// (see ../../README.md).
+//
+// bilink addresses links by plain index, not compass name -- north,
+// east, south, west here are just local constants this program picks
+// because that's the convention static/index.html's 2D-mesh topology
+// happens to use (slot 0=north, 1=east, 2=south, 3=west). A different
+// topology would define its own convention; bilink itself doesn't
+// know or care what a given index physically connects to.
 //
 //go:build js && wasm
 
@@ -12,6 +19,13 @@ import (
 	"time"
 
 	"emulator/nodeprog/bilink"
+)
+
+const (
+	north = 0
+	east  = 1
+	south = 2
+	west  = 3
 )
 
 const waves = 3
@@ -36,31 +50,31 @@ func main() {
 	for wave := 0; wave < waves; wave++ {
 		switch {
 		case c == 0:
-			// originate the wave east, then await its reflection
+			// originate the wave east, then await its reflection back via the same link
 			time.Sleep(hopDelay)
 			bilink.Screenf("wave %d: send east = %d", wave, wave)
-			bilink.Send(bilink.East, int32(wave))
-			v := bilink.Recv(bilink.East)
+			bilink.Send(east, int32(wave))
+			v := bilink.Recv(east)
 			bilink.Screenf("wave %d: reflected back = %d", wave, v)
 
 		case c == cols-1:
 			// last column: receive, then reflect straight back west
-			v := bilink.Recv(bilink.West)
+			v := bilink.Recv(west)
 			bilink.Screenf("wave %d: got %d, reflecting", wave, v)
 			time.Sleep(hopDelay)
-			bilink.Send(bilink.West, v)
+			bilink.Send(west, v)
 
 		default:
 			// middle: forward the wave east, then forward its reflection west
-			v := bilink.Recv(bilink.West)
+			v := bilink.Recv(west)
 			bilink.Screenf("wave %d: got %d, forward east", wave, v)
 			time.Sleep(hopDelay)
-			bilink.Send(bilink.East, v)
+			bilink.Send(east, v)
 
-			v2 := bilink.Recv(bilink.East)
+			v2 := bilink.Recv(east)
 			bilink.Screenf("wave %d: reflection %d, forward west", wave, v2)
 			time.Sleep(hopDelay)
-			bilink.Send(bilink.West, v2)
+			bilink.Send(west, v2)
 		}
 	}
 
