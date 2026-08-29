@@ -6,6 +6,9 @@
 // scheduler needed. See ../bil/STRATEGY.md's "Emulator architecture"
 // note and the plan this spike validates.
 //
+// Extended: also proves a SECOND sequential blocking async call works
+// after the first, since Phase A's ripple demo does many in a row.
+//
 //go:build js && wasm
 
 package main
@@ -22,7 +25,7 @@ import (
 // function "waitForChange" is expected to return immediately (kicking
 // off an Atomics.waitAsync chain) and invoke cb exactly once, later,
 // when the watched memory word changes.
-func waitForSignal() {
+func waitForSignal(which int) {
 	done := make(chan struct{})
 	var cb js.Func
 	cb = js.FuncOf(func(this js.Value, args []js.Value) any {
@@ -30,7 +33,7 @@ func waitForSignal() {
 		close(done)
 		return nil
 	})
-	js.Global().Call("waitForChange", cb)
+	js.Global().Call("waitForChange", which, cb)
 	<-done
 }
 
@@ -40,14 +43,17 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		fmt.Println("spike: goroutine A calling waitForSignal (should block only itself)")
-		waitForSignal()
-		fmt.Println("spike: goroutine A woke up -- link wait resolved")
+		fmt.Println("spike: goroutine A calling waitForSignal(0)")
+		waitForSignal(0)
+		fmt.Println("spike: goroutine A woke up from signal 0")
+		fmt.Println("spike: goroutine A calling waitForSignal(1) -- SECOND sequential wait")
+		waitForSignal(1)
+		fmt.Println("spike: goroutine A woke up from signal 1 -- second wait also resolved")
 	}()
 
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 8; i++ {
+		for i := 0; i < 12; i++ {
 			fmt.Println("spike: heartbeat", i)
 			time.Sleep(400 * time.Millisecond)
 		}

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bil grid emulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0C2748; --bg-raised:#11365E; --accent:#D6A428; --accent-ink:#1A1204;
+    --accent-2:#7DD3E8; --ink:#EAF2FA; --ink-dim:#9FC2E0; --ink-faint:#6E93B8;
+    --rule:rgba(234,242,250,.22); --rule-strong:rgba(234,242,250,.4);
+    --font-head:'Rajdhani','Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:1.5rem; background:var(--bg); color:var(--ink);
+    font-family:var(--font-mono);
+  }
+  h1{
+    font-family:var(--font-head); font-weight:700; font-size:1.6rem;
+    margin:0 0 .3rem; color:var(--ink);
+  }
+  p.sub{color:var(--ink-faint); font-size:.85rem; margin:0 0 1.2rem;}
+  .controls{display:flex; align-items:center; gap:.8rem; margin-bottom:1.4rem;}
+  .controls label{font-size:.8rem; color:var(--ink-dim);}
+  .controls input{
+    width:3.2rem; font-family:var(--font-mono); font-size:.9rem;
+    background:var(--bg-raised); color:var(--ink); border:1px solid var(--rule-strong);
+    padding:.3rem .4rem; border-radius:2px;
+  }
+  .controls button{
+    font-family:var(--font-mono); font-size:.85rem; font-weight:600;
+    background:var(--accent); color:var(--accent-ink); border:none;
+    padding:.4rem .9rem; border-radius:2px; cursor:pointer;
+  }
+  .controls button:hover{filter:brightness(1.08);}
+  #gridWrap{position:relative;}
+  #linkSvg{position:absolute; inset:0; pointer-events:none;}
+  .link-line{stroke:var(--rule-strong); stroke-width:1.5;}
+  #nodeGrid{display:grid; gap:10px; position:relative;}
+  .tile{
+    background:var(--bg-raised); border:1px solid var(--rule);
+    border-radius:3px; padding:.4rem .5rem; min-height:5.4rem;
+    display:flex; flex-direction:column;
+  }
+  .tile.error{border-color:#E0554F; box-shadow:0 0 0 1px #E0554F inset;}
+  .tile.error .tile-screen{color:#F09B96;}
+  .tile-label{
+    font-size:.68rem; color:var(--accent); font-weight:600;
+    letter-spacing:.04em; margin-bottom:.25rem;
+  }
+  .tile-screen{
+    font-size:.62rem; line-height:1.35; color:var(--ink-dim);
+    white-space:pre-wrap; word-break:break-word; flex:1;
+  }
+</style>
+</head>
+<body>
+
+<h1>Bil grid emulator</h1>
+<p class="sub">Each tile is one node: an isolated Go/WASM instance in its own Worker, wired to its nearest neighbours by real blocking links. See ../README.md.</p>
+
+<div class="controls">
+  <label>rows <input id="rowsInput" type="number" min="1" max="12" value="6"></label>
+  <label>cols <input id="colsInput" type="number" min="1" max="12" value="7"></label>
+  <button id="startBtn">Restart grid</button>
+</div>
+
+<div id="gridWrap">
+  <svg id="linkSvg"></svg>
+  <div id="nodeGrid"></div>
+</div>
+
+<script>
+  const BUF_BYTES = 128; // offset 0 = STATE, offset 1 = PAYLOAD (int32 words)
+
+  let workers = [];
+  let screenLines = {};
+
+  function makeLinkPair() {
+    return { ab: new SharedArrayBuffer(BUF_BYTES), ba: new SharedArrayBuffer(BUF_BYTES) };
+  }
+
+  // Plain mesh, not torus: edge/corner nodes simply have fewer wired
+  // directions, matching real transputer board wiring.
+  function buildTopology(rows, cols) {
+    const nodeLinks = Array.from({ length: rows }, () =>
+      Array.from({ length: cols }, () => ({}))
+    );
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols - 1; c++) {
+        const { ab, ba } = makeLinkPair(); // ab: (r,c)->(r,c+1), ba: (r,c+1)->(r,c)
+        nodeLinks[r][c].east = { out: ab, in: ba };
+        nodeLinks[r][c + 1].west = { out: ba, in: ab };
+      }
+    }
+    for (let r = 0; r < rows - 1; r++) {
+      for (let c = 0; c < cols; c++) {
+        const { ab, ba } = makeLinkPair(); // ab: (r,c)->(r+1,c), ba: (r+1,c)->(r,c)
+        nodeLinks[r][c].south = { out: ab, in: ba };
+        nodeLinks[r + 1][c].north = { out: ba, in: ab };
+      }
+    }
+    return nodeLinks;
+  }
+
+  function buildGridDOM(rows, cols) {
+    const grid = document.getElementById("nodeGrid");
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.innerHTML = "";
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.id = `tile-${r}-${c}`;
+        tile.innerHTML =
+          `<div class="tile-label">${r},${c}</div>` +
+          `<div class="tile-screen" id="screen-${r}-${c}"></div>`;
+        grid.appendChild(tile);
+      }
+    }
+  }
+
+  function appendScreenLine(r, c, text, isError) {
+    const key = `${r}-${c}`;
+    if (!screenLines[key]) screenLines[key] = [];
+    screenLines[key].push(isError ? "ERROR: " + text : text);
+    if (screenLines[key].length > 4) screenLines[key].shift();
+    const el = document.getElementById(`screen-${r}-${c}`);
+    if (el) el.textContent = screenLines[key].join("\n");
+    const tile = document.getElementById(`tile-${r}-${c}`);
+    if (tile && isError) tile.classList.add("error");
+  }
+
+  function drawLinkLines(rows, cols) {
+    const svg = document.getElementById("linkSvg");
+    const wrap = document.getElementById("gridWrap");
+    const wrapRect = wrap.getBoundingClientRect();
+    svg.setAttribute("width", wrapRect.width);
+    svg.setAttribute("height", wrapRect.height);
+    svg.innerHTML = "";
+
+    const ns = "http://www.w3.org/2000/svg";
+    function center(r, c) {
+      const el = document.getElementById(`tile-${r}-${c}`);
+      const rect = el.getBoundingClientRect();
+      return { x: rect.left - wrapRect.left + rect.width / 2, y: rect.top - wrapRect.top + rect.height / 2 };
+    }
+    function line(p1, p2) {
+      const el = document.createElementNS(ns, "line");
+      el.setAttribute("x1", p1.x); el.setAttribute("y1", p1.y);
+      el.setAttribute("x2", p2.x); el.setAttribute("y2", p2.y);
+      el.setAttribute("class", "link-line");
+      svg.appendChild(el);
+    }
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (c < cols - 1) line(center(r, c), center(r, c + 1));
+        if (r < rows - 1) line(center(r, c), center(r + 1, c));
+      }
+    }
+  }
+
+  function startGrid(rows, cols) {
+    workers.forEach((w) => w.terminate());
+    workers = [];
+    screenLines = {};
+
+    const nodeLinks = buildTopology(rows, cols);
+    buildGridDOM(rows, cols);
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const w = new Worker("node-worker.js");
+        w.onmessage = (e) => {
+          if (e.data && e.data.type === "screen") {
+            appendScreenLine(e.data.row, e.data.col, e.data.text);
+          } else if (e.data && e.data.type === "error") {
+            appendScreenLine(e.data.row, e.data.col, e.data.text, true);
+          }
+        };
+        w.onerror = (e) => appendScreenLine(r, c, e.message, true);
+        w.postMessage({ row: r, col: c, rows, cols, links: nodeLinks[r][c] });
+        workers.push(w);
+      }
+    }
+
+    requestAnimationFrame(() => drawLinkLines(rows, cols));
+  }
+
+  document.getElementById("startBtn").addEventListener("click", () => {
+    const rows = parseInt(document.getElementById("rowsInput").value, 10);
+    const cols = parseInt(document.getElementById("colsInput").value, 10);
+    startGrid(rows, cols);
+  });
+
+  window.addEventListener("resize", () => {
+    const rows = parseInt(document.getElementById("rowsInput").value, 10);
+    const cols = parseInt(document.getElementById("colsInput").value, 10);
+    drawLinkLines(rows, cols);
+  });
+
+  startGrid(6, 7);
+</script>
+</body>
+</html>

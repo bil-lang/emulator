@@ -1,26 +1,22 @@
-// Throwaway spike worker. Receives a SharedArrayBuffer from the main
-// thread, then runs a Go/WASM program that blocks one goroutine on
-// "waitForChange" -- implemented here via Atomics.waitAsync, never a
-// synchronous Atomics.wait, so this goroutine's wait never freezes the
-// whole WASM instance (see spike/main.go and ../../bil/STRATEGY.md).
+// Throwaway spike worker. Receives two SharedArrayBuffers from the
+// main thread, then runs a Go/WASM program that blocks on
+// "waitForChange" TWICE in sequence -- implemented here via
+// Atomics.waitAsync, never a synchronous Atomics.wait, so neither
+// wait ever freezes the whole WASM instance (see spike/main.go).
 
-let linkView = null;
+let views = [];
 
-// Atomics.waitAsync only guarantees "the value changed since it was
-// last known to equal `expected`" -- not that it became any specific
-// value. So this must re-check the real value on every wake and retry
-// if it's a spurious/timeout wake that didn't actually change it.
-function waitForChange(cb) {
+function waitForChange(which, cb) {
+  const view = views[which];
   const idx = 0;
   function attempt() {
-    const cur = Atomics.load(linkView, idx);
+    const cur = Atomics.load(view, idx);
     if (cur !== 0) {
       cb();
       return;
     }
-    const w = Atomics.waitAsync(linkView, idx, 0);
+    const w = Atomics.waitAsync(view, idx, 0);
     if (!w.async) {
-      // value already changed between the load above and this call
       attempt();
       return;
     }
@@ -31,7 +27,7 @@ function waitForChange(cb) {
 self.waitForChange = waitForChange;
 
 self.onmessage = (e) => {
-  linkView = new Int32Array(e.data.sab);
+  views = e.data.sabs.map((sab) => new Int32Array(sab));
   importScripts("wasm_exec.js");
   const go = new Go();
   WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((r) => {
