@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>emulator spike</title>
+</head>
+<body>
+<p>Open the console. Expect interleaved heartbeats, a "woke up" line partway through (after this page signals at 2s), then a final "done" line. No deadlock error should ever appear.</p>
+<script>
+  const sab = new SharedArrayBuffer(8);
+  const view = new Int32Array(sab);
+
+  const worker = new Worker("worker.js");
+  worker.postMessage({ sab });
+
+  setTimeout(() => {
+    console.log("main: signaling worker now");
+    Atomics.store(view, 0, 1);
+    Atomics.notify(view, 0);
+  }, 2000);
+</script>
+</body>
+</html>
