@@ -1,0 +1,11 @@
+placements:
+  - match: {row: 0, col: 0}
+    proc: controller
+  - match: {row: 0, col: "cols-1"}
+    proc: rowEnd
+default:
+links:
+  aliases:
+    controller: {eastLink: 1}
+    relay: {eastLink: 1, westLink: 3}
+    rowEnd: {westLink: 3}
