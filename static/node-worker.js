@@ -64,6 +64,15 @@ function requireLink(i) {
   return link;
 }
 
+// linkWired lets a running node program check whether link[i] actually
+// has a neighbour wired up before using it, instead of only finding out
+// via requireLink's own throw on misuse -- see bilink.LinkWired's own
+// doc comment for why placement makes this worth having (several
+// differently-roled procs, each assuming their own subset of links).
+self.linkWired = function (i) {
+  return views[i] !== undefined;
+};
+
 self.linkSend = function (i, value, cb) {
   const view = requireLink(i).out;
   waitUntil(view, STATE, IDLE, () => {

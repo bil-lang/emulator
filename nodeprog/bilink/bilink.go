@@ -69,6 +69,28 @@ func NumRows() int  { return js.Global().Get("bilRows").Int() }
 func NumCols() int  { return js.Global().Get("bilCols").Int() }
 func NumLinks() int { return js.Global().Get("bilNumLinks").Int() }
 
+// ID reports this node's flat, topology-agnostic identity -- the
+// backing primitive for Bil's `processor(id)` placement form (see
+// bil's PLACEMENT-DESIGN discussion: occam's own PROCESSOR is a flat
+// int precisely because a network need not be a grid at all). Computed
+// as Row()*NumCols()+Col() for today's rectangular-grid topology, but
+// that computation is this package's own business, not the language's
+// -- a future non-grid topology could define ID however it likes
+// without `placed par`'s semantics changing at all, exactly as this
+// package already declines to assume anything about what a link index
+// means (see the package doc comment above).
+func ID() int { return Row()*NumCols() + Col() }
+
+// LinkWired reports whether link[idx] actually has a neighbour wired up
+// on this node, without triggering the panic Send/Recv would on a
+// genuinely unwired index. Placement makes it normal for several
+// differently-roled procs to each assume their own subset of links is
+// present (a `controller` might have an east link a plain `relay`
+// doesn't); this lets a node program check first rather than needing
+// every proc to independently re-derive its own wiring from Row/Col by
+// hand, the way node programs do today.
+func LinkWired(idx int) bool { return js.Global().Call("linkWired", idx).Bool() }
+
 // Screenf writes one line to this node's on-page mini screen.
 func Screenf(format string, a ...any) {
 	js.Global().Call("screenPrint", fmt.Sprintf(format, a...))

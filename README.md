@@ -13,12 +13,13 @@ Then open `http://localhost:8789/` — `SharedArrayBuffer` requires the COOP/COE
 ## Node programs
 
 - `nodeprog/ripple` — Phase A: a hand-written Go demo proving the substrate (isolation + real blocking links) works at all, with no dependency on `bil`.
-- `nodeprog/meshripple` — Phase B: the same ripple demo, but compiled from a real `.bil` program (`../bil/examples/18-mesh-ripple.bil`) via `../bil/tools/bilc`'s `link[i]` support — requires a sibling checkout of the `bil` repo at `../bil`. Checked in as generated Go (see its header for the regenerate command) rather than requiring a build step to try it.
+- `nodeprog/meshripple` — Phase B: the same ripple demo, but compiled from a real `.bil` program (`../bil/examples/19-mesh-ripple.bil`) via `../bil/tools/bilc`'s `link[i]` support — requires a sibling checkout of the `bil` repo at `../bil`. Checked in as generated Go (see its header for the regenerate command) rather than requiring a build step to try it. Every node runs the *same* proc, discovering its own role by branching on its own position.
+- `nodeprog/placedcontroller` — Phase C: a genuinely *heterogeneous* demo, compiled from `../bil/examples/20-placed-controller.bil` via `bilc`'s `placed par`/`processor(...)`/`place ... at link[...]` support — four separately-named, separately-reasoned-about procs (`controller`, `rowEnd`, `relay`, `idle`), each dispatched to specific processors by the `.bil` source itself rather than by an `if`/`else` inside one shared proc. Also checked in as generated Go, alongside a companion `main.topology.yaml` — a small, structural (not fully resolved — see its own comments) description of the declared placement, generated for free from the same `.bil` source.
 
-Either one needs building for `static/node.wasm` before `cmd/serve` will show it:
+Any of these needs building for `static/node.wasm` before `cmd/serve` will show it:
 
 ```
-GOOS=js GOARCH=wasm go build -o static/node.wasm ./nodeprog/ripple      # or ./nodeprog/meshripple
+GOOS=js GOARCH=wasm go build -o static/node.wasm ./nodeprog/ripple      # or ./nodeprog/meshripple, ./nodeprog/placedcontroller
 ```
 
 **One-Worker-is-one-node, always:** a node program must not try to enumerate the grid itself (no `par`/`par range` in a `.bil` node program, no spawning N*M goroutines in a hand-written one) — the emulator already spawns and positions every node's own Worker; a node program's only job is to run once, discovering who it is via `bilink.Row()`/`Col()`. Ignoring this produced a real bug during Phase A→B verification: a nested replicated `par` in `main()` spawned 42 goroutines inside one Worker, all reading that one Worker's fixed identity and racing on the same link buffers.

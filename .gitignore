@@ -1,3 +1,4 @@
 *.wasm
 .*.swp
 /serve
+.DS_Store
