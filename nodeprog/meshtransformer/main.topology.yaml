@@ -6,6 +6,6 @@ placements:
 default:
 links:
   aliases:
-    controller: {eastLink: 1}
-    relay: {eastLink: 1, westLink: 3}
-    rowEnd: {westLink: 3}
+    controller: {fromEast: 1, toEast: 1}
+    relay: {fromEast: 1, fromWest: 3, toEast: 1, toWest: 3}
+    rowEnd: {fromWest: 3, toWest: 3}
