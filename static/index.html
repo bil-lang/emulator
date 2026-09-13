@@ -255,7 +255,12 @@
   // own ordering) and returns the one proc that should run at (r,c), by
   // evaluating each leaf's clause match and if/else condition chain
   // against this launch's real grid size -- the concrete resolution
-  // bilc itself can never do, since it never knows rows/cols.
+  // bilc itself can never do, since it never knows rows/cols. A match's
+  // row or col may be the literal string "*" (from a bilc `processor(1,
+  // *)` partial wildcard) -- that dimension always matches, with no
+  // expression to evaluate at all; a fully-wild clause (`default` or
+  // `processor(*, *)`) is reported as `m.default` instead, never as
+  // row/col both "*" (see bilc's DeployManifest doc comment).
   function resolveRole(leaves, r, c, rows, cols) {
     const vars = { r, c, rows, cols };
     for (const leaf of leaves) {
@@ -263,7 +268,11 @@
       let clauseMatches;
       if (m.default) clauseMatches = true;
       else if ("id" in m) clauseMatches = evalExpr(m.id, vars) === r * cols + c;
-      else clauseMatches = evalExpr(m.row, vars) === r && evalExpr(m.col, vars) === c;
+      else {
+        const rowOk = m.row === "*" || evalExpr(m.row, vars) === r;
+        const colOk = m.col === "*" || evalExpr(m.col, vars) === c;
+        clauseMatches = rowOk && colOk;
+      }
       if (!clauseMatches) continue;
 
       let ok = true;
