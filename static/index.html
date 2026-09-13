@@ -62,8 +62,8 @@
 <p class="sub">Each tile is one node: an isolated Go/WASM instance in its own Worker, wired to its nearest neighbours by real blocking links. See ../README.md.</p>
 
 <div class="controls">
-  <label>rows <input id="rowsInput" type="number" min="1" max="12" value="6"></label>
-  <label>cols <input id="colsInput" type="number" min="1" max="12" value="7"></label>
+  <label>rows <input id="rowsInput" type="number" min="1" max="10" value="6"></label>
+  <label>cols <input id="colsInput" type="number" min="1" max="10" value="7"></label>
   <button id="startBtn">Restart grid</button>
 </div>
 
@@ -77,6 +77,7 @@
 
   let workers = [];
   let screenLines = {};
+  let currentRows = 0, currentCols = 0;
 
   function makeLinkPair() {
     return { ab: new SharedArrayBuffer(BUF_BYTES), ba: new SharedArrayBuffer(BUF_BYTES) };
@@ -171,16 +172,64 @@
     }
   }
 
-  function startGrid(rows, cols) {
+  // Tile heights aren't fixed -- #nodeGrid's rows auto-size to
+  // .tile-screen's content, which grows as each node's output arrives
+  // (up to 4 lines, see appendScreenLine) -- so the whole grid's layout
+  // keeps shifting well after the one-shot draw right after spawn.
+  // Watching #nodeGrid's own box size (rather than only window resize)
+  // catches that content-driven reflow, not just viewport changes.
+  let linkRedrawScheduled = false;
+  function scheduleDrawLinkLines() {
+    if (linkRedrawScheduled) return;
+    linkRedrawScheduled = true;
+    requestAnimationFrame(() => {
+      linkRedrawScheduled = false;
+      drawLinkLines(currentRows, currentCols);
+    });
+  }
+  new ResizeObserver(scheduleDrawLinkLines).observe(document.getElementById("nodeGrid"));
+
+  // Spawning every Worker in one tight loop overloads the browser well
+  // before the grid gets big: each Worker independently fetches and
+  // compiles a ~2.6MB WASM module and boots a full separate Go runtime
+  // (its own goroutine scheduler, GC, heap) -- genuinely heavy per node
+  // by this emulator's own design (real OS thread, real isolated
+  // memory, see README.md). Firing 100+ of those concurrently silently
+  // stalls some of them with no error at all, confirmed even at 12x12
+  // (144 nodes) on a freshly loaded page. Staggering creation in small
+  // batches keeps concurrent WASM instantiation bounded instead.
+  const SPAWN_BATCH_SIZE = 6;
+  const SPAWN_BATCH_DELAY_MS = 200;
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Guards against a second "Restart grid" click while a previous
+  // staggered spawn is still mid-flight -- without this, the old
+  // spawn loop would keep running after `workers`/`screenLines` were
+  // reset for the new grid, wiring stale Workers into current state.
+  let spawnGeneration = 0;
+
+  async function startGrid(rows, cols) {
+    const myGeneration = ++spawnGeneration;
+
     workers.forEach((w) => w.terminate());
     workers = [];
     screenLines = {};
+    currentRows = rows;
+    currentCols = cols;
 
     const nodeLinks = buildTopology(rows, cols);
     buildGridDOM(rows, cols);
 
+    const coords = [];
     for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
+      for (let c = 0; c < cols; c++) coords.push([r, c]);
+    }
+
+    for (let i = 0; i < coords.length; i += SPAWN_BATCH_SIZE) {
+      if (myGeneration !== spawnGeneration) return; // superseded by a newer restart
+      for (const [r, c] of coords.slice(i, i + SPAWN_BATCH_SIZE)) {
         const w = new Worker("node-worker.js");
         w.onmessage = (e) => {
           if (e.data && e.data.type === "screen") {
@@ -193,22 +242,35 @@
         w.postMessage({ row: r, col: c, rows, cols, links: nodeLinks[r][c] });
         workers.push(w);
       }
+      if (i + SPAWN_BATCH_SIZE < coords.length) await sleep(SPAWN_BATCH_DELAY_MS);
     }
 
-    requestAnimationFrame(() => drawLinkLines(rows, cols));
+    scheduleDrawLinkLines();
+  }
+
+  // number inputs don't clamp values typed by hand (only spinner
+  // clicks respect min/max), so a stray "20" reaches here uncapped --
+  // clamp explicitly. The cap itself exists because spawning too many
+  // real-OS-thread Workers at once silently stalls past a few hundred
+  // (see ../README.md); each tile is one Worker, so rows*cols is what
+  // actually matters.
+  function clampInput(id) {
+    const el = document.getElementById(id);
+    const min = parseInt(el.min, 10), max = parseInt(el.max, 10);
+    let v = parseInt(el.value, 10);
+    if (isNaN(v)) v = min;
+    v = Math.min(max, Math.max(min, v));
+    el.value = v;
+    return v;
   }
 
   document.getElementById("startBtn").addEventListener("click", () => {
-    const rows = parseInt(document.getElementById("rowsInput").value, 10);
-    const cols = parseInt(document.getElementById("colsInput").value, 10);
+    const rows = clampInput("rowsInput");
+    const cols = clampInput("colsInput");
     startGrid(rows, cols);
   });
 
-  window.addEventListener("resize", () => {
-    const rows = parseInt(document.getElementById("rowsInput").value, 10);
-    const cols = parseInt(document.getElementById("colsInput").value, 10);
-    drawLinkLines(rows, cols);
-  });
+  window.addEventListener("resize", scheduleDrawLinkLines);
 
   startGrid(6, 7);
 </script>

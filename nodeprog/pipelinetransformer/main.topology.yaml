@@ -1,0 +1,6 @@
+placements:
+  - match: {row: 1, col: 0}
+    proc: attnController
+  - match: {row: 1, col: "cols-1"}
+    proc: attnRowEnd
+default:
