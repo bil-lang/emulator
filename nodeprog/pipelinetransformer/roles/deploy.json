@@ -1,0 +1,83 @@
+{
+  "transport": "message-channel",
+  "leaves": [
+    {
+      "match": {
+        "row": "1",
+        "col": "0"
+      },
+      "proc": "attnController",
+      "binds": {
+        "eastIn": "1",
+        "eastOut": "1",
+        "north": "0",
+        "south": "2"
+      }
+    },
+    {
+      "match": {
+        "row": "1",
+        "col": "cols-1"
+      },
+      "proc": "attnRowEnd",
+      "binds": {
+        "north": "0",
+        "south": "2",
+        "westIn": "3",
+        "westOut": "3"
+      }
+    },
+    {
+      "match": {
+        "row": "0",
+        "col": "*"
+      },
+      "proc": "embedStage",
+      "binds": {
+        "south": "2"
+      }
+    },
+    {
+      "match": {
+        "row": "1",
+        "col": "*"
+      },
+      "proc": "attnRelay",
+      "binds": {
+        "eastIn": "1",
+        "eastOut": "1",
+        "north": "0",
+        "south": "2",
+        "westIn": "3",
+        "westOut": "3"
+      }
+    },
+    {
+      "match": {
+        "row": "2",
+        "col": "*"
+      },
+      "proc": "ffnStage",
+      "binds": {
+        "north": "0",
+        "south": "2"
+      }
+    },
+    {
+      "match": {
+        "row": "3",
+        "col": "*"
+      },
+      "proc": "outputStage",
+      "binds": {
+        "north": "0"
+      }
+    },
+    {
+      "match": {
+        "default": true
+      },
+      "proc": "idle"
+    }
+  ]
+}
