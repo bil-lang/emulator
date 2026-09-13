@@ -206,7 +206,7 @@ idle() {
 func main() {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:104
-	r, cols := bilink.Row(), bilink.NumCols()
+	cols := bilink.NumCols()
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:105
 
@@ -215,12 +215,11 @@ func main() {
 	_ = (0)
 	_ = (0)
 	_ = (cols - 1)
-	_ = (r == 0)
-	_ = (r == 0)
+	_ = (0)
 	idle()
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:128
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:127
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:129
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:128
 }
 
 func par(branches ...func()) {
