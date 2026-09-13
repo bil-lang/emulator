@@ -903,211 +903,172 @@ relay(cols int) {
 		for r := cols - 1; r >= 1; r-- {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:343
-			// Arrow ops (`->`/`<-`) are only recognized as a whole
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:344
-			// statement right at a statement start (see bilc's
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:345
-			// isStmtStart) — a `case ...:` label doesn't count, only
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:346
-			// the `{` that opens a block does, hence the explicit
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:347
-			// block wrapping each case body below.
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:348
 			switch {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:349
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:344
 			case r == c:
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:350
-				{
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:345
+				time.Sleep(hopDelay)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:351
-					time.Sleep(hopDelay)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:346
+				bilink.Send(3, int32(myTok))
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:346
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:352
-					bilink.Send(3, int32(myTok))
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:352
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:353
-				}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:354
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:347
 			case r > c:
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:355
-				{
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:348
+				var v int32
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:356
-					var v int32
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:349
+				v = bilink.Recv(1)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:349
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:357
-					v = bilink.Recv(1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:357
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:350
+				time.Sleep(hopDelay)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:358
-					time.Sleep(hopDelay)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:351
+				bilink.Send(3, v)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:351
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:359
-					bilink.Send(3, v)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:359
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:360
-				}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:361
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:352
 			}
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:362
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:353
 		}
 
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:354
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:355
+		var predicted int32
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:356
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:357
+		for s := 1; s < cols; s++ {
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:358
+			switch {
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:359
+			case s == c:
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:360
+				predicted = bilink.Recv(3)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:360
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:361
+			case s > c:
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:362
+				var v int32
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:363
+				v = bilink.Recv(3)
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:363
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:364
-		var predicted int32
+				time.Sleep(hopDelay)
 
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:365
+				bilink.Send(1, v)
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:365
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:366
-		for s := 1; s < cols; s++ {
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:367
-			switch {
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:368
-			case s == c:
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:369
-				{
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:370
-					predicted = bilink.Recv(3)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:370
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:371
-				}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:372
-			case s > c:
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:373
-				{
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:374
-					var v int32
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:375
-					v = bilink.Recv(3)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:375
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:376
-					time.Sleep(hopDelay)
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:377
-					bilink.Send(1, v)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:377
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:378
-				}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:379
 			}
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:380
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:367
 		}
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:368
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:369
+		bilink.Screenf("gen %d: %q -> %q", gen, wordAt(myTok), wordAt(int(predicted)))
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:370
+	}
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:371
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:372
+	bilink.Screenf("relay done")
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:373
+	time.Sleep(1<<63 - 1)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:373
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:374
+}
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:375
+
+// idle runs everywhere off row 0 -- this demo only uses one row.
+//
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:376
+func
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:377
+idle() {
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:378
+	bilink.Screenf("idle -- not part of row 0")
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:379
+	time.Sleep(1<<63 - 1)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:379
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:380
+}
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:381
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:382
-		bilink.Screenf("gen %d: %q -> %q", gen, wordAt(myTok), wordAt(int(predicted)))
+func main() {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:383
-	}
+	r, cols := bilink.Row(), bilink.NumCols()
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:384
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:385
-	bilink.Screenf("relay done")
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:386
-	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:386
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:387
-}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:388
-
-// idle runs everywhere off row 0 -- this demo only uses one row.
-//
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:389
-func
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:390
-idle() {
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:391
-	bilink.Screenf("idle -- not part of row 0")
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:392
-	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:392
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:393
-}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:394
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:395
-func main() {
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:396
-	r, cols := bilink.Row(), bilink.NumCols()
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:397
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:398
 	switch {
 	case bilink.Row() == 0 && bilink.Col() == 0:
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:400
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:387
 		controller(cols)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:401
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:388
 
 	case bilink.Row() == 0 && bilink.Col() == cols-1:
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:403
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:390
 		rowEnd(cols)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:404
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:391
 
 	default:
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:406
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:393
 		if r == 0 {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:407
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:394
 			relay(cols)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:408
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:395
 		} else {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:409
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:396
 			idle()
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:410
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:397
 		}
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:411
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:398
 
 	}
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:412
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:399
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:413
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:400
 }
 
 func par(branches ...func()) {
