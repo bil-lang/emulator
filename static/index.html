@@ -189,6 +189,108 @@
   }
   new ResizeObserver(scheduleDrawLinkLines).observe(document.getElementById("nodeGrid"));
 
+  // Small, purpose-built expression evaluator for the tiny grammar
+  // bilc's placed-par clause-match/leaf-condition expressions actually
+  // use in roles/deploy.json: identifiers (r, c, rows, cols), int
+  // literals, ==, !=, &&, +, -. Deliberately not eval()/Function() --
+  // these strings come from this page's own trusted build output, but a
+  // hand-rolled evaluator keeps the supported grammar explicit and
+  // auditable rather than silently growing to accept arbitrary JS.
+  function evalExpr(src, vars) {
+    let i = 0;
+    function skipWs() { while (i < src.length && /\s/.test(src[i])) i++; }
+    function consume(tok) {
+      skipWs();
+      if (src.startsWith(tok, i)) { i += tok.length; return true; }
+      return false;
+    }
+    function parsePrimary() {
+      skipWs();
+      if (consume("(")) {
+        const v = parseAnd();
+        if (!consume(")")) throw new Error(`evalExpr: expected ) in "${src}"`);
+        return v;
+      }
+      const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(src.slice(i));
+      if (m) {
+        i += m[0].length;
+        if (!(m[0] in vars)) throw new Error(`evalExpr: unknown identifier "${m[0]}" in "${src}"`);
+        return vars[m[0]];
+      }
+      const n = /^[0-9]+/.exec(src.slice(i));
+      if (n) { i += n[0].length; return parseInt(n[0], 10); }
+      throw new Error(`evalExpr: unexpected token at ${i} in "${src}"`);
+    }
+    function parseAdd() {
+      let v = parsePrimary();
+      for (;;) {
+        if (consume("+")) v = v + parsePrimary();
+        else if (consume("-")) v = v - parsePrimary();
+        else return v;
+      }
+    }
+    function parseCmp() {
+      const v = parseAdd();
+      if (consume("==")) return v === parseAdd();
+      if (consume("!=")) return v !== parseAdd();
+      return v;
+    }
+    function parseAnd() {
+      let v = parseCmp();
+      while (consume("&&")) {
+        const rhs = parseCmp(); // always parse, to advance i past a false lhs too
+        v = v && rhs;
+      }
+      return v;
+    }
+    const result = parseAnd();
+    skipWs();
+    if (i !== src.length) throw new Error(`evalExpr: trailing input in "${src}"`);
+    return result;
+  }
+
+  // resolveRole walks roles/deploy.json's leaves in order (matching
+  // switch/if-else "first match wins" semantics: non-default clauses
+  // always precede default's own leaves, per parsePlacedParClauses's
+  // own ordering) and returns the one proc that should run at (r,c), by
+  // evaluating each leaf's clause match and if/else condition chain
+  // against this launch's real grid size -- the concrete resolution
+  // bilc itself can never do, since it never knows rows/cols.
+  function resolveRole(leaves, r, c, rows, cols) {
+    const vars = { r, c, rows, cols };
+    for (const leaf of leaves) {
+      const m = leaf.match;
+      let clauseMatches;
+      if (m.default) clauseMatches = true;
+      else if ("id" in m) clauseMatches = evalExpr(m.id, vars) === r * cols + c;
+      else clauseMatches = evalExpr(m.row, vars) === r && evalExpr(m.col, vars) === c;
+      if (!clauseMatches) continue;
+
+      let ok = true;
+      for (const cond of leaf.conditions || []) {
+        const v = !!evalExpr(cond.expr, vars);
+        if (cond.negate ? v : !v) { ok = false; break; }
+      }
+      if (ok) return leaf.proc;
+    }
+    return null;
+  }
+
+  // The link-native boot cascade's spanning tree: a simple deterministic
+  // "staircase" over the grid graph, rooted at (0,0) -- every node's
+  // parent is its west neighbour, except column-0 nodes (other than the
+  // root itself) whose parent is the node directly north. Equivalently,
+  // a node's children are its east neighbour (always, when one exists)
+  // and, only for column-0 nodes, its south neighbour. This is a
+  // property of how code is *delivered*, independent of the ordinary
+  // mesh links ordinary Bil `link[i]` traffic uses.
+  function bootChildCoords(r, c, rows, cols) {
+    const kids = [];
+    if (c + 1 < cols) kids.push([r, c + 1]);
+    if (c === 0 && r + 1 < rows) kids.push([r + 1, 0]);
+    return kids;
+  }
+
   // Spawning every Worker in one tight loop overloads the browser well
   // before the grid gets big: each Worker independently fetches and
   // compiles a ~2.6MB WASM module and boots a full separate Go runtime
@@ -210,6 +312,106 @@
   // reset for the new grid, wiring stale Workers into current state.
   let spawnGeneration = 0;
 
+  function makeWorker(r, c) {
+    const w = new Worker("node-worker.js");
+    w.onmessage = (e) => {
+      if (e.data && e.data.type === "screen") {
+        appendScreenLine(e.data.row, e.data.col, e.data.text);
+      } else if (e.data && e.data.type === "error") {
+        appendScreenLine(e.data.row, e.data.col, e.data.text, true);
+      }
+    };
+    w.onerror = (e) => appendScreenLine(r, c, e.message, true);
+    workers.push(w);
+    return w;
+  }
+
+  async function startGridLegacy(rows, cols, nodeLinks, myGeneration) {
+    const coords = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) coords.push([r, c]);
+    }
+    for (let i = 0; i < coords.length; i += SPAWN_BATCH_SIZE) {
+      if (myGeneration !== spawnGeneration) return; // superseded by a newer restart
+      for (const [r, c] of coords.slice(i, i + SPAWN_BATCH_SIZE)) {
+        makeWorker(r, c).postMessage({ row: r, col: c, rows, cols, links: nodeLinks[r][c] });
+      }
+      if (i + SPAWN_BATCH_SIZE < coords.length) await sleep(SPAWN_BATCH_DELAY_MS);
+    }
+  }
+
+  // Link-native boot cascade: a host (this same page, acting as the one
+  // external entry point) injects code and identity only at (0,0);
+  // every other node learns its role, its position, and the actual code
+  // to run solely by relaying hop-by-hop across the spanning tree
+  // bootChildCoords defines -- never told directly by this page the way
+  // startGridLegacy tells every Worker outright. Used only when the
+  // current program has roles/deploy.json (built by bilc's
+  // RoleBinaries/DeployManifest); a program with no placed-par split
+  // falls back to startGridLegacy entirely. See README.md.
+  async function startGridCascade(rows, cols, nodeLinks, manifest, myGeneration) {
+    const leaves = manifest.leaves;
+    const roleNames = [...new Set(leaves.map((l) => l.proc))];
+    const roleBytes = {};
+    await Promise.all(roleNames.map(async (name) => {
+      const res = await fetch(`roles/${name}.wasm`);
+      roleBytes[name] = await res.arrayBuffer();
+    }));
+    if (myGeneration !== spawnGeneration) return;
+
+    // One MessageChannel per tree edge, keyed by the *child's* own
+    // coordinate: the parent keeps port1 (to send down), the child
+    // keeps port2 (as its own boot-parent port). (0,0) has no such
+    // edge -- its boot-parent is the host's own separate channel.
+    const edgeChannel = Array.from({ length: rows }, () => new Array(cols));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (r === 0 && c === 0) continue;
+        edgeChannel[r][c] = new MessageChannel();
+      }
+    }
+    const hostChannel = new MessageChannel();
+
+    const coords = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) coords.push([r, c]);
+    }
+    for (let i = 0; i < coords.length; i += SPAWN_BATCH_SIZE) {
+      if (myGeneration !== spawnGeneration) return;
+      for (const [r, c] of coords.slice(i, i + SPAWN_BATCH_SIZE)) {
+        const bootParentPort = (r === 0 && c === 0) ? hostChannel.port2 : edgeChannel[r][c].port2;
+        const bootChildPorts = bootChildCoords(r, c, rows, cols).map(([cr, cc]) => edgeChannel[cr][cc].port1);
+        makeWorker(r, c).postMessage(
+          { links: nodeLinks[r][c], bootParentPort, bootChildPorts },
+          [bootParentPort, ...bootChildPorts]
+        );
+      }
+      if (i + SPAWN_BATCH_SIZE < coords.length) await sleep(SPAWN_BATCH_DELAY_MS);
+    }
+    if (myGeneration !== spawnGeneration) return;
+
+    // Build the whole remaining tree's boot payload once, then send it
+    // to the one entry point a host may ever inject code at. wasmBytes
+    // is deliberately not marked Transferable: many nodes commonly
+    // share the same role's bytes, and a transfer would detach the
+    // buffer from every recipient but the first -- letting structured
+    // clone copy it instead is a fixed, one-time, few-megabyte cost.
+    function buildPayload(r, c) {
+      const proc = resolveRole(leaves, r, c, rows, cols);
+      if (!proc) throw new Error(`no placed-par leaf matches (${r},${c})`);
+      return {
+        role: proc,
+        wasmBytes: roleBytes[proc],
+        identity: { row: r, col: c, rows, cols, numLinks: NUM_LINKS },
+        forward: bootChildCoords(r, c, rows, cols).map(([cr, cc], idx) => ({
+          childIndex: idx,
+          payload: buildPayload(cr, cc),
+        })),
+      };
+    }
+    hostChannel.port1.postMessage(buildPayload(0, 0));
+  }
+
   async function startGrid(rows, cols) {
     const myGeneration = ++spawnGeneration;
 
@@ -222,27 +424,22 @@
     const nodeLinks = buildTopology(rows, cols);
     buildGridDOM(rows, cols);
 
-    const coords = [];
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) coords.push([r, c]);
-    }
+    // Feature-detect per-role delivery: a program built with
+    // RoleBinaries/DeployManifest ships roles/deploy.json alongside its
+    // node.wasm; a program with no placed-par split has neither, and
+    // this page falls back to the legacy direct-postMessage bootstrap
+    // entirely unchanged.
+    let manifest = null;
+    try {
+      const res = await fetch("roles/deploy.json");
+      if (res.ok) manifest = await res.json();
+    } catch (e) { /* no cascade artifacts for this program -- legacy path */ }
+    if (myGeneration !== spawnGeneration) return;
 
-    for (let i = 0; i < coords.length; i += SPAWN_BATCH_SIZE) {
-      if (myGeneration !== spawnGeneration) return; // superseded by a newer restart
-      for (const [r, c] of coords.slice(i, i + SPAWN_BATCH_SIZE)) {
-        const w = new Worker("node-worker.js");
-        w.onmessage = (e) => {
-          if (e.data && e.data.type === "screen") {
-            appendScreenLine(e.data.row, e.data.col, e.data.text);
-          } else if (e.data && e.data.type === "error") {
-            appendScreenLine(e.data.row, e.data.col, e.data.text, true);
-          }
-        };
-        w.onerror = (e) => appendScreenLine(r, c, e.message, true);
-        w.postMessage({ row: r, col: c, rows, cols, links: nodeLinks[r][c] });
-        workers.push(w);
-      }
-      if (i + SPAWN_BATCH_SIZE < coords.length) await sleep(SPAWN_BATCH_DELAY_MS);
+    if (manifest) {
+      await startGridCascade(rows, cols, nodeLinks, manifest, myGeneration);
+    } else {
+      await startGridLegacy(rows, cols, nodeLinks, myGeneration);
     }
 
     scheduleDrawLinkLines();

@@ -2,3 +2,4 @@
 .*.swp
 /serve
 .DS_Store
+/static/roles/

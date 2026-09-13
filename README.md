@@ -24,4 +24,21 @@ Any of these needs building for `static/node.wasm` before `cmd/serve` will show 
 GOOS=js GOARCH=wasm go build -o static/node.wasm ./nodeprog/ripple      # or ./nodeprog/meshripple, ./nodeprog/placedcontroller, ./nodeprog/meshtransformer, ./nodeprog/pipelinetransformer
 ```
 
+## Host and boot cascade
+
+For any `placed par` program (`placedcontroller` today), `bilc` also emits `roles/<name>/main.go` — one standalone Go source per distinct role — and `roles/deploy.json`, describing every reachable leaf's clause match, `if`/`else` condition chain, and link-index bindings (see `../bil/tools/bilc/bilc.go`'s `RoleBinaries`/`DeployManifest`). Build each role and copy the manifest into `static/`:
+
+```
+for role in controller rowEnd relay idle; do
+  GOOS=js GOARCH=wasm go build -o static/roles/$role.wasm ./nodeprog/placedcontroller/roles/$role
+done
+cp nodeprog/placedcontroller/roles/deploy.json static/roles/deploy.json
+```
+
+When `static/roles/deploy.json` exists, `index.html`'s `startGrid` uses a genuinely link-native bootstrap instead of the direct-postMessage one every other demo above still uses: a **host** (this same page, acting as the one external entry point) injects role, identity, and the actual compiled bytes only at processor (0,0), and every other node learns all three solely by relaying hop-by-hop across a spanning tree of the grid (`bootChildCoords`) — never told directly by the page the way `startGridLegacy` tells every Worker outright. This fetches each distinct role's `.wasm` exactly once (4 requests for a 6×7 `placedcontroller` grid, not 42), fanning it out afterward via `MessageChannel`s rather than redundant network fetches — real transputer hardware has no side-channel to every node either, only nearest-neighbour links, and this is the same shape: `Row()`/`Col()`/etc. end up set identically either path (see `bilink.go`), so a node program itself can't tell which bootstrap ran.
+
+The actual hop-by-hop relay uses `MessageChannel`s, not `bilink`'s own `SharedArrayBuffer`+`Atomics` link primitive — deliberately: that primitive moves one 32-bit word per round trip, fine for ordinary Bil channel traffic but far too slow to relay multi-megabyte binaries through. `roles/deploy.json`'s `transport` field names which boot-cascade mechanism a launch expects (`message-channel` is the only one implemented; `link-chunked` — a real, slower, chunked-over-`link[0]` transport for a genuinely link-only, non-browser target — is named but not built).
+
+Measured directly: splitting into per-role binaries barely changes each `.wasm`'s own size (~2.66MB full-switch vs. ~2.65–2.66MB per role) — Go's own runtime (scheduler, GC, `reflect` for `altN`) dominates the binary, not the actual role code, so this doesn't fix per-node memory footprint. What it does fix is redundant network fetches at grid scale. TinyGo (not yet evaluated) is the more likely lever for binary size itself.
+
 **One-Worker-is-one-node, always:** a node program must not try to enumerate the grid itself (no `par`/`par range` in a `.bil` node program, no spawning N*M goroutines in a hand-written one) — the emulator already spawns and positions every node's own Worker; a node program's only job is to run once, discovering who it is via `bilink.Row()`/`Col()`. Ignoring this produced a real bug during Phase A→B verification: a nested replicated `par` in `main()` spawned 42 goroutines inside one Worker, all reading that one Worker's fixed identity and racing on the same link buffers.

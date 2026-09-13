@@ -1,0 +1,57 @@
+{
+  "transport": "message-channel",
+  "leaves": [
+    {
+      "match": {
+        "row": "0",
+        "col": "0"
+      },
+      "proc": "controller",
+      "binds": {
+        "fromEast": "1",
+        "toEast": "1"
+      }
+    },
+    {
+      "match": {
+        "row": "0",
+        "col": "cols-1"
+      },
+      "proc": "rowEnd",
+      "binds": {
+        "fromWest": "3",
+        "toWest": "3"
+      }
+    },
+    {
+      "match": {
+        "default": true
+      },
+      "conditions": [
+        {
+          "expr": "r == 0",
+          "negate": false
+        }
+      ],
+      "proc": "relay",
+      "binds": {
+        "fromWestIn": "3",
+        "fromWestOut": "3",
+        "toEastIn": "1",
+        "toEastOut": "1"
+      }
+    },
+    {
+      "match": {
+        "default": true
+      },
+      "conditions": [
+        {
+          "expr": "r == 0",
+          "negate": true
+        }
+      ],
+      "proc": "idle"
+    }
+  ]
+}

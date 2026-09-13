@@ -103,15 +103,48 @@ self.screenPrint = function (text) {
 
 self.onmessage = (e) => {
   const msg = e.data;
+
+  views = msg.links.map((link) =>
+    link ? { out: new Int32Array(link.out), in: new Int32Array(link.in) } : undefined
+  );
+
+  if (msg.bootParentPort) {
+    // Link-native boot cascade (see index.html's startGridCascade):
+    // this node's role, its identity (row/col/rows/cols), and the
+    // actual WASM bytes to run arrive only via this port -- relayed
+    // hop-by-hop from a host attached at (0,0), never told directly by
+    // the page the way the legacy bootstrap below does. bilRow/bilCol
+    // etc. end up set exactly the same way either path, so bilink.go's
+    // own Row()/Col() accessors need no knowledge of which path ran.
+    msg.bootParentPort.onmessage = (be) => {
+      const payload = be.data;
+      self.bilRow = payload.identity.row;
+      self.bilCol = payload.identity.col;
+      self.bilRows = payload.identity.rows;
+      self.bilCols = payload.identity.cols;
+      self.bilNumLinks = payload.identity.numLinks;
+
+      for (const item of payload.forward) {
+        msg.bootChildPorts[item.childIndex].postMessage(item.payload);
+      }
+
+      importScripts("wasm_exec.js");
+      const go = new Go();
+      WebAssembly.instantiate(payload.wasmBytes, go.importObject).then((r) => {
+        go.run(r.instance);
+      });
+    };
+    return;
+  }
+
+  // Legacy bootstrap: role/identity told directly by the page, one
+  // shared node.wasm fetched by every Worker itself -- still used by
+  // any program with no roles/deploy.json (see index.html's startGrid).
   self.bilRow = msg.row;
   self.bilCol = msg.col;
   self.bilRows = msg.rows;
   self.bilCols = msg.cols;
   self.bilNumLinks = msg.links.length;
-
-  views = msg.links.map((link) =>
-    link ? { out: new Int32Array(link.out), in: new Int32Array(link.in) } : undefined
-  );
 
   importScripts("wasm_exec.js");
   const go = new Go();

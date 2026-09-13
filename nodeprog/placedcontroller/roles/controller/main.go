@@ -211,20 +211,13 @@ func main() {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:105
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:106
-	switch {
-	case bilink.Row() == 0 && bilink.Col() == 0:
-		controller(nil, nil)
-	case bilink.Row() == 0 && bilink.Col() == cols-1:
-		rowEnd(nil, nil)
-	default:
-		if
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:118
-		r == 0 {
-			relay(nil, nil, nil, nil)
-		} else {
-			idle()
-		}
-	}
+	_ = (0)
+	_ = (0)
+	_ = (0)
+	_ = (cols - 1)
+	_ = (r == 0)
+	_ = (r == 0)
+	controller(nil, nil)
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:128
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:129
