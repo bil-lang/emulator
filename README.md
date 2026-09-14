@@ -1,8 +1,8 @@
 # emulator
 
-A genuine (not simulated) software emulation environment for an NxM array of processors, built for the [Bil](../bil) language project. Each grid node runs as an isolated Go-compiled-to-WASM program inside its own dedicated Web Worker — a real OS thread with a real isolated linear memory per node — wired to its N/E/S/W nearest neighbours by point-to-point serial links, each a genuine blocking rendezvous over a `SharedArrayBuffer` — real hardware-realistic isolation, not a goroutines-and-Go-channels simulation.
+A genuine (not simulated) software emulation environment for an NxM array of processors, built for the [Bil](../bil) language project. Each grid node runs as an isolated Go-compiled-to-WASM program inside its own dedicated Web Worker — a real OS thread with a real isolated linear memory per node — wired to its N/E/S/W nearest neighbours by bilateral serial links, each a genuine blocking rendezvous for real hardware-realistic isolation, not a goroutines-and-Go-channels simulation.
 
-**This repo only matters for the small part of Bil that targets a physical mesh** — programs using `link[...]`, `place`, or `placed par` (`bil/examples/19` through `22` today). The rest of Bil's examples are ordinary `chan`/`proc`/`par` programs, run directly with `bil run examples/N.bil` on a normal machine — they don't involve this repo, a browser, or WASM at all.
+**This repo only matters for parallel Bil that targets a physical mesh** — specifically programs using `link[...]`, `place`, or `placed par` (`bil/examples/19` through `22` today). Otherwise Bil's examples are ordinary `chan`/`proc`/`par` programs, run directly with `bil run examples/N.bil` concurrently on a normal machine.
 
 ## Install
 
