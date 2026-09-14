@@ -43,7 +43,7 @@ controller(eastOut chan<- int32, eastIn <-chan int32) {
 	bilink.Screenf("controller ready, %d cols", cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:49
-	for round := 0; round < rounds; round++ {
+	for round := range rounds {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:50
 		time.Sleep(hopDelay)
@@ -91,7 +91,7 @@ rowEnd(westIn <-chan int32, westOut chan<- int32) {
 	bilink.Screenf("row-end ready")
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:64
-	for round := 0; round < rounds; round++ {
+	for round := range rounds {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:65
 		var v int32
@@ -142,7 +142,7 @@ relay(westIn <-chan int32, eastOut chan<- int32, eastIn <-chan int32, westOut ch
 	bilink.Screenf("relay ready")
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:80
-	for round := 0; round < rounds; round++ {
+	for range rounds {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:81
 		var v int32

@@ -275,7 +275,7 @@ func add4(a, b [dModel]float64) [dModel]float64 {
 	var y [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:139
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:140
 		y[i] = a[i] + b[i]
@@ -298,13 +298,13 @@ func matVec4(w [dModel][dModel]float64, x [dModel]float64) [dModel]float64 {
 	var y [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:147
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:148
 		sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:149
-		for j := 0; j < dModel; j++ {
+		for j := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:150
 			sum += w[i][j] * x[j]
@@ -333,7 +333,7 @@ func dot4(a, b [dModel]float64) float64 {
 	sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:159
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:160
 		sum += a[i] * b[i]
@@ -432,13 +432,13 @@ func feedForward(x [dModel]float64) [dModel]float64 {
 	var hidden [dFF]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:193
-	for j := 0; j < dFF; j++ {
+	for j := range dFF {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:194
 		sum := b1[j]
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:195
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:196
 			sum += x[i] * w1[i][j]
@@ -456,13 +456,13 @@ func feedForward(x [dModel]float64) [dModel]float64 {
 	var out [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:201
-	for k := 0; k < dModel; k++ {
+	for k := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:202
 		sum := b2[k]
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:203
-		for j := 0; j < dFF; j++ {
+		for j := range dFF {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:204
 			sum += hidden[j] * w2[j][k]
@@ -491,13 +491,13 @@ func outputLogits(x [dModel]float64) [vocabSize]float64 {
 	var logits [vocabSize]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:213
-	for k := 0; k < vocabSize; k++ {
+	for k := range vocabSize {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:214
 		sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:215
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:216
 			sum += x[i] * wo[i][k]
@@ -581,7 +581,7 @@ func runTransformer(tokens []int) []int {
 	x0 := make([][dModel]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:244
-	for c := 0; c < cols; c++ {
+	for c := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:245
 		x0[c] = add4(embedding[tokens[c]%vocabSize], posEncode(c))
@@ -601,7 +601,7 @@ func runTransformer(tokens []int) []int {
 	v := make([][dModel]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:251
-	for c := 0; c < cols; c++ {
+	for c := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:252
 		q[c] = matVec4(wq, x0[c])
@@ -621,13 +621,13 @@ func runTransformer(tokens []int) []int {
 	predicted := make([]int, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:258
-	for c := 0; c < cols; c++ {
+	for c := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:259
 		scores := make([]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:260
-		for j := 0; j < cols; j++ {
+		for j := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:261
 			scores[j] = dot4(q[c], k[j]) / math.Sqrt(float64(dModel))
@@ -644,10 +644,10 @@ func runTransformer(tokens []int) []int {
 		var attnOut [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:266
-		for j := 0; j < cols; j++ {
+		for j := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:267
-			for i := 0; i < dModel; i++ {
+			for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:268
 				attnOut[i] += weights[j] * v[j][i]
@@ -704,7 +704,7 @@ controller(eastOut chan<- int32, eastIn <-chan int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:286
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:287
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:288
 		tokens := make([]int, cols)
@@ -803,7 +803,7 @@ rowEnd(westOut chan<- int32, westIn <-chan int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:320
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:321
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:322
 		myTok := (c + gen) % vocabSize
@@ -884,7 +884,7 @@ relay(eastIn <-chan int32, westOut chan<- int32, westIn <-chan int32, eastOut ch
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:347
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:348
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/21-mesh-transformer.bil:349
 		myTok := (c + gen) % vocabSize

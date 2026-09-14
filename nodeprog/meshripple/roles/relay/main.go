@@ -70,7 +70,7 @@ origin(eastOut chan<- int32, eastIn <-chan int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:59
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:60
-	for wave := 0; wave < waves; wave++ {
+	for wave := range waves {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:61
 		time.Sleep(hopDelay)
@@ -128,7 +128,7 @@ reflect(westIn <-chan int32, westOut chan<- int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:78
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:79
-	for wave := 0; wave < waves; wave++ {
+	for wave := range waves {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:80
 		var v int32
@@ -183,7 +183,7 @@ relay(westIn <-chan int32, eastOut chan<- int32, eastIn <-chan int32, westOut ch
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:96
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:97
-	for wave := 0; wave < waves; wave++ {
+	for wave := range waves {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/19-mesh-ripple.bil:98
 		var v int32

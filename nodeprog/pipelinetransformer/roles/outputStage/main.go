@@ -272,7 +272,7 @@ func add4(a, b [dModel]float64) [dModel]float64 {
 	var y [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:170
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:171
 		y[i] = a[i] + b[i]
@@ -295,13 +295,13 @@ func matVec4(w [dModel][dModel]float64, x [dModel]float64) [dModel]float64 {
 	var y [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:178
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:179
 		sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:180
-		for j := 0; j < dModel; j++ {
+		for j := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:181
 			sum += w[i][j] * x[j]
@@ -330,7 +330,7 @@ func dot4(a, b [dModel]float64) float64 {
 	sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:190
-	for i := 0; i < dModel; i++ {
+	for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:191
 		sum += a[i] * b[i]
@@ -429,13 +429,13 @@ func feedForward(x [dModel]float64) [dModel]float64 {
 	var hidden [dFF]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:224
-	for j := 0; j < dFF; j++ {
+	for j := range dFF {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:225
 		sum := b1[j]
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:226
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:227
 			sum += x[i] * w1[i][j]
@@ -453,13 +453,13 @@ func feedForward(x [dModel]float64) [dModel]float64 {
 	var out [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:232
-	for k := 0; k < dModel; k++ {
+	for k := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:233
 		sum := b2[k]
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:234
-		for j := 0; j < dFF; j++ {
+		for j := range dFF {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:235
 			sum += hidden[j] * w2[j][k]
@@ -488,13 +488,13 @@ func outputLogits(x [dModel]float64) [vocabSize]float64 {
 	var logits [vocabSize]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:244
-	for k := 0; k < vocabSize; k++ {
+	for k := range vocabSize {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:245
 		sum := 0.0
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:246
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:247
 			sum += x[i] * wo[i][k]
@@ -578,7 +578,7 @@ func runAttention(xs [][dModel]float64) [][dModel]float64 {
 	v := make([][dModel]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:275
-	for c := 0; c < cols; c++ {
+	for c := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:276
 		q[c] = matVec4(wq, xs[c])
@@ -598,13 +598,13 @@ func runAttention(xs [][dModel]float64) [][dModel]float64 {
 	resid1 := make([][dModel]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:282
-	for c := 0; c < cols; c++ {
+	for c := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:283
 		scores := make([]float64, cols)
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:284
-		for j := 0; j < cols; j++ {
+		for j := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:285
 			scores[j] = dot4(q[c], k[j]) / math.Sqrt(float64(dModel))
@@ -621,10 +621,10 @@ func runAttention(xs [][dModel]float64) [][dModel]float64 {
 		var attnOut [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:290
-		for j := 0; j < cols; j++ {
+		for j := range cols {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:291
-			for i := 0; i < dModel; i++ {
+			for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:292
 				attnOut[i] += weights[j] * v[j][i]
@@ -738,7 +738,7 @@ embedStage(south chan<- int32) {
 	sendSouth := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:330
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:331
 			bilink.Send(2, f32bits(v[i]))
@@ -761,7 +761,7 @@ embedStage(south chan<- int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:337
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:338
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:339
 		tok := (c + gen) % vocabSize
@@ -839,7 +839,7 @@ attnController(north <-chan int32, eastIn <-chan int32, eastOut chan<- int32, so
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:364
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:365
 			var bits int32
@@ -867,7 +867,7 @@ attnController(north <-chan int32, eastIn <-chan int32, eastOut chan<- int32, so
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:373
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:374
 			var bits int32
@@ -892,7 +892,7 @@ attnController(north <-chan int32, eastIn <-chan int32, eastOut chan<- int32, so
 	sendEast := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:381
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:382
 			bilink.Send(1, f32bits(v[i]))
@@ -908,7 +908,7 @@ attnController(north <-chan int32, eastIn <-chan int32, eastOut chan<- int32, so
 	sendSouth := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:386
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:387
 			bilink.Send(2, f32bits(v[i]))
@@ -931,7 +931,7 @@ attnController(north <-chan int32, eastIn <-chan int32, eastOut chan<- int32, so
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:393
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:394
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:395
 		xs := make([][dModel]float64, cols)
@@ -1038,7 +1038,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:431
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:432
 			var bits int32
@@ -1066,7 +1066,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:440
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:441
 			var bits int32
@@ -1094,7 +1094,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:449
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:450
 			var bits int32
@@ -1119,7 +1119,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 	sendWest := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:457
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:458
 			bilink.Send(3, f32bits(v[i]))
@@ -1135,7 +1135,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 	sendEast := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:462
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:463
 			bilink.Send(1, f32bits(v[i]))
@@ -1151,7 +1151,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 	sendSouth := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:467
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:468
 			bilink.Send(2, f32bits(v[i]))
@@ -1177,7 +1177,7 @@ attnRelay(north <-chan int32, eastIn <-chan int32, westOut chan<- int32, westIn 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:475
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:476
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:477
 		myVec := recvNorth()
@@ -1306,7 +1306,7 @@ attnRowEnd(north <-chan int32, westOut chan<- int32, westIn <-chan int32, south 
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:520
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:521
 			var bits int32
@@ -1334,7 +1334,7 @@ attnRowEnd(north <-chan int32, westOut chan<- int32, westIn <-chan int32, south 
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:529
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:530
 			var bits int32
@@ -1359,7 +1359,7 @@ attnRowEnd(north <-chan int32, westOut chan<- int32, westIn <-chan int32, south 
 	sendWest := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:537
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:538
 			bilink.Send(3, f32bits(v[i]))
@@ -1375,7 +1375,7 @@ attnRowEnd(north <-chan int32, westOut chan<- int32, westIn <-chan int32, south 
 	sendSouth := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:542
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:543
 			bilink.Send(2, f32bits(v[i]))
@@ -1395,7 +1395,7 @@ attnRowEnd(north <-chan int32, westOut chan<- int32, westIn <-chan int32, south 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:548
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:549
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:550
 		myVec := recvNorth()
@@ -1466,7 +1466,7 @@ ffnStage(north <-chan int32, south chan<- int32) {
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:573
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:574
 			var bits int32
@@ -1491,7 +1491,7 @@ ffnStage(north <-chan int32, south chan<- int32) {
 	sendSouth := func(v [dModel]float64) {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:581
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:582
 			bilink.Send(2, f32bits(v[i]))
@@ -1511,7 +1511,7 @@ ffnStage(north <-chan int32, south chan<- int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:587
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:588
-	for gen := 0; gen < generations; gen++ {
+	for range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:589
 		resid1 := recvNorth()
@@ -1568,7 +1568,7 @@ outputStage(north <-chan int32) {
 		var v [dModel]float64
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:607
-		for i := 0; i < dModel; i++ {
+		for i := range dModel {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:608
 			var bits int32
@@ -1600,7 +1600,7 @@ outputStage(north <-chan int32) {
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:617
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:618
-	for gen := 0; gen < generations; gen++ {
+	for gen := range generations {
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/22-pipeline-transformer.bil:619
 		resid2 := recvNorth()
