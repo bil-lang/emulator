@@ -6,7 +6,7 @@
 // instance and no preemption. Send/Recv here each park only the one
 // calling goroutine, via an ordinary Go channel receive, so Go's own
 // scheduler keeps running everything else in this node while a proc
-// waits on a link -- see ../../README.md and ../../../bil/STRATEGY.md's
+// waits on a link -- see ../README.md and ../../bil/STRATEGY.md's
 // "Emulator architecture" note for why this matters.
 //
 // Links are addressed by plain index (link[0], link[1], ...) rather
@@ -14,8 +14,9 @@
 // no assumption about topology -- a 2D mesh (4 links), a 3D mesh (6),
 // or anything else all just pick however many slots they need. What
 // index means what physical neighbour is a convention owned by the
-// topology/layout layer (see node-worker.js and static/index.html),
-// not by this package or by a node program.
+// topology/layout layer (see cmd/wasm/static/node-worker.js and
+// cmd/wasm/static/index.html, or cmd/multicore/topology.go for the
+// native backend), not by this package or by a node program.
 //
 //go:build js && wasm
 

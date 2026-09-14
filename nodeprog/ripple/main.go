@@ -6,20 +6,18 @@
 //
 // bilink addresses links by plain index, not compass name -- link 1
 // is east and link 3 is west below, per the convention
-// static/index.html's 2D-mesh topology happens to use (slots 0 and 2
-// are north/south, unused here since this demo only ripples along a
-// row). A different topology would define its own convention; bilink
+// cmd/wasm/static/index.html's 2D-mesh topology happens to use (slots 0
+// and 2 are north/south, unused here since this demo only ripples along
+// a row). A different topology would define its own convention; bilink
 // itself doesn't know or care what a given index physically connects
 // to.
-//
-//go:build js && wasm
 
 package main
 
 import (
 	"time"
 
-	"emulator/nodeprog/bilink"
+	"emulator/bilink"
 )
 
 const waves = 3

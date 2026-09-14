@@ -1,7 +1,9 @@
-// serve is a minimal static file server that sets the two response
+// wasm is the browser backend: a minimal static file server (its own
+// static/ subdirectory, alongside this file) that sets the two response
 // headers SharedArrayBuffer requires (COOP/COEP) -- without them,
 // SharedArrayBuffer does not exist in the page at all. Stdlib only,
-// matching bil/tools/bilc's zero-third-party-dependency convention.
+// matching bil/tools/bilc's zero-third-party-dependency convention. See
+// ./README.md for this backend's own quickstart and quirks.
 package main
 
 import (
@@ -12,7 +14,10 @@ import (
 
 func main() {
 	addr := flag.String("addr", "localhost:8787", "listen address")
-	dir := flag.String("dir", ".", "directory to serve")
+	// Default assumes invocation from the repo root (`go run ./cmd/wasm`),
+	// where this backend's own assets live right alongside this binary's
+	// source -- pass -dir explicitly if running from anywhere else.
+	dir := flag.String("dir", "cmd/wasm/static", "directory to serve")
 	flag.Parse()
 
 	fs := http.FileServer(http.Dir(*dir))
