@@ -4,217 +4,214 @@
 
 //go:build js && wasm
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:40
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:37
 package main
 
 import "sync"
 
 import "emulator/nodeprog/bilink"
 
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:38
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:39
+import "time"
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:40
+
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:41
+const rounds = 3
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:42
-import "time"
+const hopDelay = 150 * time.Millisecond
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:43
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:44
-const rounds = 3
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:45
-const hopDelay = 150 * time.Millisecond
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:46
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:47
 // controller runs at exactly one processor, (0,0): originates each
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:48
-// round's value east on toEast, then waits for it to come back
-
-// reflected on fromEast.
+// round's value east, then waits for it to come back reflected.
 //
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:49
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:45
 func
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:50
-controller(toEast chan<- int32, fromEast <-chan int32) {
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:46
+controller(eastOut chan<- int32, eastIn <-chan int32) {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:51
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:47
 	cols := bilink.NumCols()
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:52
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:48
 	bilink.Screenf("controller ready, %d cols", cols)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:53
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:49
 	for round := 0; round < rounds; round++ {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:54
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:50
 		time.Sleep(hopDelay)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:55
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:51
 		bilink.Send(1, int32(round))
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:55
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:51
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:56
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:52
 		var v int32
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:57
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:53
 		v = bilink.Recv(1)
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:53
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:54
+		bilink.Screenf("round %d: reflected %d", round, v)
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:55
+	}
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:56
+	bilink.Screenf("controller done")
+
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:57
+	time.Sleep(1<<63 - 1)
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:57
 
 //line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:58
-		bilink.Screenf("round %d: reflected %d", round, v)
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:59
-	}
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:60
-	bilink.Screenf("controller done")
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:61
-	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:61
-
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:62
 }
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:63
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:59
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:64
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:60
 // rowEnd runs at (0,cols-1): the far end of row 0, receiving from the
 
 // west and reflecting straight back west.
 //
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:65
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:61
 func
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:66
-rowEnd(fromWest <-chan int32, toWest chan<- int32) {
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:62
+rowEnd(westIn <-chan int32, westOut chan<- int32) {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:67
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:63
 	bilink.Screenf("row-end ready")
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:68
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:64
 	for round := 0; round < rounds; round++ {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:69
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:65
 		var v int32
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:70
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:66
 		v = bilink.Recv(3)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:70
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:66
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:71
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:67
 		bilink.Screenf("round %d: got %d, reflecting", round, v)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:72
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:68
 		time.Sleep(hopDelay)
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:73
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:69
 		bilink.Send(3, v)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:73
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:69
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:74
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:70
 	}
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:75
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:71
 	bilink.Screenf("row-end done")
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:76
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:72
 	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:76
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:72
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:77
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:73
 }
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:78
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:74
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:79
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:75
 // relay runs on every other row-0 processor: forward east, forward
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:80
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:76
 // the reflection back west. Both the west and east links are used
 
 // bidirectionally, so each gets two directional parameters.
 //
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:81
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:77
 func
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:82
-relay(fromWestIn <-chan int32, toEastOut chan<- int32, toEastIn <-chan int32, fromWestOut chan<- int32) {
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:78
+relay(westIn <-chan int32, eastOut chan<- int32, eastIn <-chan int32, westOut chan<- int32) {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:83
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:79
 	bilink.Screenf("relay ready")
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:84
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:80
 	for round := 0; round < rounds; round++ {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:85
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:81
 		var v int32
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:86
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:82
 		v = bilink.Recv(3)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:86
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:82
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:87
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:83
 		bilink.Send(1, v)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:87
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:83
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:88
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:84
 		var v2 int32
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:89
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:85
 		v2 = bilink.Recv(1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:89
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:85
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:90
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:86
 		bilink.Send(3, v2)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:90
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:86
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:91
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:87
 	}
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:92
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:88
 	bilink.Screenf("relay done")
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:93
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:89
 	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:93
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:89
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:94
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:90
 }
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:95
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:91
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:96
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:92
 // idle runs everywhere off row 0 — nothing to do in this demo, just
 
 // confirming placement dispatched here correctly at all.
 //
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:97
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:93
 func
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:98
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:94
 idle() {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:99
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:95
 	bilink.Screenf("idle -- not part of row 0")
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:100
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:96
 	time.Sleep(1<<63 - 1)
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:100
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:96
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:101
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:97
 }
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:102
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:98
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:103
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:99
 func main() {
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:104
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:100
 	cols := bilink.NumCols()
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:105
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:101
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:106
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:102
 	switch {
 	case bilink.Row() == 0 && bilink.Col() == 0:
 		controller(nil, nil)
@@ -225,9 +222,9 @@ func main() {
 	default:
 		idle()
 	}
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:127
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:123
 
-//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:128
+//line /Users/stephenroe/Library/CloudStorage/Dropbox/ClaudeZone/bil/examples/20-placed-controller.bil:124
 }
 
 func par(branches ...func()) {

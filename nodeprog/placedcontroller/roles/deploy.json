@@ -8,8 +8,8 @@
       },
       "proc": "controller",
       "binds": {
-        "fromEast": "1",
-        "toEast": "1"
+        "eastIn": "1",
+        "eastOut": "1"
       }
     },
     {
@@ -19,8 +19,8 @@
       },
       "proc": "rowEnd",
       "binds": {
-        "fromWest": "3",
-        "toWest": "3"
+        "westIn": "3",
+        "westOut": "3"
       }
     },
     {
@@ -30,10 +30,10 @@
       },
       "proc": "relay",
       "binds": {
-        "fromWestIn": "3",
-        "fromWestOut": "3",
-        "toEastIn": "1",
-        "toEastOut": "1"
+        "eastIn": "1",
+        "eastOut": "1",
+        "westIn": "3",
+        "westOut": "3"
       }
     },
     {

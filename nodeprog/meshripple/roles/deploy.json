@@ -3,10 +3,10 @@
   "leaves": [
     {
       "match": {
-        "row": "0",
+        "row": "*",
         "col": "0"
       },
-      "proc": "controller",
+      "proc": "origin",
       "binds": {
         "eastIn": "1",
         "eastOut": "1"
@@ -14,24 +14,11 @@
     },
     {
       "match": {
-        "row": "0",
+        "row": "*",
         "col": "cols-1"
       },
-      "proc": "rowEnd",
+      "proc": "reflect",
       "binds": {
-        "westIn": "3",
-        "westOut": "3"
-      }
-    },
-    {
-      "match": {
-        "row": "0",
-        "col": "*"
-      },
-      "proc": "relay",
-      "binds": {
-        "eastIn": "1",
-        "eastOut": "1",
         "westIn": "3",
         "westOut": "3"
       }
@@ -40,7 +27,13 @@
       "match": {
         "default": true
       },
-      "proc": "idle"
+      "proc": "relay",
+      "binds": {
+        "eastIn": "1",
+        "eastOut": "1",
+        "westIn": "3",
+        "westOut": "3"
+      }
     }
   ]
 }
