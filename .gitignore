@@ -3,3 +3,11 @@
 /serve
 .DS_Store
 /static/roles/
+
+# Node programs built fresh each time from ../bil/examples/*.bil via bilc --
+# see README's "Node programs" section. nodeprog/ripple and nodeprog/bilink
+# are hand-written and stay tracked.
+/nodeprog/meshripple/
+/nodeprog/meshtransformer/
+/nodeprog/placedcontroller/
+/nodeprog/pipelinetransformer/
