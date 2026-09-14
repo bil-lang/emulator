@@ -17,10 +17,11 @@ const STATE = 0; // int32 index: 0=idle, 1=data-ready, 2=consumed
 const PAYLOAD = 1; // int32 index: the transferred value
 const IDLE = 0, DATA_READY = 1, CONSUMED = 2;
 
-// Go panics/fatal errors print via console.error (wasm_exec.js's
-// stderr shim), not as an uncaught exception this Worker's onerror
-// would catch -- so without this, a crashed node just goes silent
-// forever instead of visibly failing. Forward it to the main thread.
+// A crashed/panicking node's failure otherwise surfaces only as a
+// console.error in this Worker's own separate DevTools context, not as
+// an uncaught exception this Worker's onerror would catch -- so without
+// this, a crashed node just goes silent forever instead of visibly
+// failing. Forward it to the main thread.
 const _consoleError = console.error.bind(console);
 console.error = (...args) => {
   _consoleError(...args);
@@ -28,6 +29,20 @@ console.error = (...args) => {
 };
 self.onerror = (e) => {
   postMessage({ type: "error", row: self.bilRow, col: self.bilCol, text: e.message });
+};
+
+// wasm_exec.js's own runtime.wasmWrite -> fs.writeSync always calls
+// console.log for every stdout/stderr write -- it ignores the file
+// descriptor entirely, so this is what plain `println`/`fmt.Println`
+// (not just an explicit bilink.Screenf call, which posts to the main
+// thread directly via screenPrint below) come out through. Wrapping it
+// here, before wasm_exec.js is even loaded, means any node program's
+// ordinary output shows up on its own page tile -- not just programs
+// that call Screenf.
+const _consoleLog = console.log.bind(console);
+console.log = (...args) => {
+  _consoleLog(...args);
+  postMessage({ type: "screen", row: self.bilRow, col: self.bilCol, text: args.map(String).join(" ") });
 };
 
 let views = []; // views[i] = {out, in} of Int32Array, or undefined if slot i isn't wired

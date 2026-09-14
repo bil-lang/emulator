@@ -478,7 +478,17 @@
 
   window.addEventListener("resize", scheduleDrawLinkLines);
 
-  startGrid(6, 7);
+  // ?rows=N&cols=N presets the fields and auto-starts at that size --
+  // used by `bil emu` to launch straight at a size it already computed
+  // (see tools/bil/gridsize.go in the bil repo), rather than requiring
+  // the rows/cols fields to be set by hand after the page loads. Falls
+  // back to the existing 6x7 default when absent, and goes through the
+  // same clampInput() every manual "Restart grid" click already does,
+  // so an out-of-range query value can't exceed min/max either.
+  const params = new URLSearchParams(location.search);
+  document.getElementById("rowsInput").value = params.get("rows") ?? "6";
+  document.getElementById("colsInput").value = params.get("cols") ?? "7";
+  startGrid(clampInput("rowsInput"), clampInput("colsInput"));
 </script>
 </body>
 </html>
