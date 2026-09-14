@@ -2,13 +2,38 @@
 
 A genuine (not simulated) software emulation environment for an NxM array of processors, built for the [Bil](../bil) language project. Each grid node runs as an isolated Go-compiled-to-WASM program inside its own dedicated Web Worker — a real OS thread with a real isolated linear memory per node — wired to its N/E/S/W nearest neighbours by point-to-point serial links, each a genuine blocking rendezvous over a `SharedArrayBuffer` — real hardware-realistic isolation, not a goroutines-and-Go-channels simulation.
 
-## Running it
+**This repo only matters for the small part of Bil that targets a physical mesh** — programs using `link[...]`, `place`, or `placed par` (`bil/examples/19` through `22` today). The rest of Bil's examples are ordinary `chan`/`proc`/`par` programs, run directly with `bil run examples/N.bil` on a normal machine — they don't involve this repo, a browser, or WASM at all.
+
+## Install
+
+1. A Go toolchain on `PATH` (same requirement as `bil` itself).
+2. A sibling checkout of [`bil`](../bil) at `../bil` — this repo builds node programs by running `bil`'s own `bilc` transpiler against `bil/examples/*.bil`, and needs that path to resolve.
+3. Clone this repo itself as `../emulator` next to `bil`. It has no public GitHub remote yet (still local-only) — for now, just have both directories side by side; once it's pushed to `github.com/bil-lang/emulator`, this step becomes a normal `git clone`.
+
+## Quickstart: run a placement example
+
+This walks through `bil/examples/20-placed-controller.bil` (Phase C, the first heterogeneous placement demo) end to end. Swap the example/nodeprog name for any of the others in "Node programs" below.
 
 ```
+# 1. build bilc
+(cd ../bil/tools/bilc/cmd/bilc && go build -o ../../bilc .)
+
+# 2. transpile the example -- writes nodeprog/placedcontroller/{main.go, roles/, main.topology.yaml}
+mkdir -p nodeprog/placedcontroller
+../bil/tools/bilc/bilc ../bil/examples/20-placed-controller.bil nodeprog/placedcontroller/main.go
+
+# 3. build it as the one binary every node runs (bilc's own runtime switch picks the role)
+GOOS=js GOARCH=wasm go build -o static/node.wasm ./nodeprog/placedcontroller
+
+# 4. serve and open it
 go run ./cmd/serve -dir static -addr localhost:8789
 ```
 
-Then open `http://localhost:8789/` — `SharedArrayBuffer` requires the COOP/COEP headers `cmd/serve` sets, so this won't work opened as a bare `file://` page. It auto-starts a 6×7 grid running whatever is currently built as `static/node.wasm`; the rows/cols fields and "Restart grid" button let you try other sizes.
+Open `http://localhost:8789/` — `SharedArrayBuffer` requires the COOP/COEP headers `cmd/serve` sets, so this won't work opened as a bare `file://` page, or served some other way without those headers. It auto-starts a 6×7 grid; the rows/cols fields and "Restart grid" button let you try other sizes without rebuilding anything.
+
+**To switch demos**, redo steps 2-3 for a different example/`nodeprog/<name>`, overwriting `static/node.wasm`, then refresh the page (or click "Restart grid") — there's no in-page selector; whichever binary is currently at `static/node.wasm` is what every node runs. Step 4's server doesn't need restarting.
+
+Step 3 above is the simplest path (one binary, `bilc`'s own runtime `switch` dispatches each node to its role). For the real link-native boot cascade instead — separate per-role binaries, hop-relayed rather than told directly — see "Host and boot cascade" below.
 
 ## Node programs
 
@@ -18,21 +43,7 @@ Then open `http://localhost:8789/` — `SharedArrayBuffer` requires the COOP/COE
 - `nodeprog/meshtransformer` — Phase D: a minimal LLM-style transformer block, compiled from `../bil/examples/21-mesh-transformer.bil`. Reuses placedcontroller's exact controller/rowEnd/relay/idle placement idiom, but generalizes the single reflected counter into gathering a whole row's input tokens to the controller and scattering back that many predicted tokens — real embeddings and attention scores crossing genuine cross-Worker links, one int32 at a time, feeding a real (if tiny and untrained) embedding + positional-encoding + self-attention + feed-forward + output-projection pass that runs on the controller once the whole row has arrived.
 - `nodeprog/pipelinetransformer` — Phase E: the same tiny transformer, but this time the mesh's own two dimensions do the actual compute distribution instead of just relaying data to one processor. Chunk by column, pipeline by row: each column is one token position, and each of the grid's first 4 rows is one transformer sub-stage (embed+posenc, attention+residual, feed-forward+residual, output-proj+argmax), with a token's representation flowing south from stage to stage. Three of the four stages are purely per-token, so every column in that row computes in parallel on its own Worker; only attention is inherently cross-token, so row 1 alone falls back to placedcontroller's gather/relay/scatter idiom, now carrying a whole `[dModel]float64` vector per hop (as 4 float32-bit-encoded int32s) instead of one scalar. Because links are unbuffered rendezvous, generations pipeline across the 4 stages for free — row 0 can start the next generation's embedding as soon as row 1 has drained the current one, without waiting for row 2/3 to finish it — so throughput is gated only by the slowest stage (attention), the same way a hardware pipeline's throughput is gated by its slowest stage. Needs at least 4 mesh rows (the default 6×7 grid qualifies).
 
-**Every demo except `ripple` is built fresh from `bil/examples/*.bil`, not checked in** (`nodeprog/{meshripple,placedcontroller,meshtransformer,pipelinetransformer}/` are gitignored) — this requires a sibling checkout of the `bil` repo at `../bil`. Build `bilc` once, then transpile whichever example you want:
-
-```
-(cd ../bil/tools/bilc/cmd/bilc && go build -o ../../bilc .)
-mkdir -p nodeprog/placedcontroller
-../bil/tools/bilc/bilc ../bil/examples/20-placed-controller.bil nodeprog/placedcontroller/main.go
-```
-
-(swap `placedcontroller`/`20-placed-controller.bil` for `meshripple`/`19-mesh-ripple.bil`, `meshtransformer`/`21-mesh-transformer.bil`, or `pipelinetransformer`/`22-pipeline-transformer.bil`.) This also writes `nodeprog/<name>/main.topology.yaml` and, for any `placed par` program, `nodeprog/<name>/roles/<role>/main.go` + `nodeprog/<name>/roles/deploy.json` (see "Host and boot cascade" below).
-
-Then build the single shared-binary form for `static/node.wasm`, which `cmd/serve`'s default grid runs:
-
-```
-GOOS=js GOARCH=wasm go build -o static/node.wasm ./nodeprog/ripple      # or ./nodeprog/meshripple, ./nodeprog/placedcontroller, ./nodeprog/meshtransformer, ./nodeprog/pipelinetransformer
-```
+Every demo except `ripple` is built fresh from `bil/examples/*.bil`, not checked in (`nodeprog/{meshripple,placedcontroller,meshtransformer,pipelinetransformer}/` are gitignored) — see the Quickstart above for the build commands; swap `placedcontroller`/`20-placed-controller.bil` for `meshripple`/`19-mesh-ripple.bil`, `meshtransformer`/`21-mesh-transformer.bil`, or `pipelinetransformer`/`22-pipeline-transformer.bil` to try a different one.
 
 ## Host and boot cascade
 
