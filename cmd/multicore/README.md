@@ -18,7 +18,7 @@ go run ./cmd/multicore -dir nodeprog/placedcontroller -rows 1 -cols 4
 
 Or skip both steps and run `bil emu -target multicore examples/20-placed-controller.bil` from the sibling `bil` repo, which builds and launches this for you (and, unlike this binary's own `-rows`/`-cols`, can infer a grid size — see "Quirks" below).
 
-`multicore` builds each role natively itself (no `GOOS`/`GOARCH` override) — there's no separate build step to run first, unlike `cmd/wasm`'s `GOOS=js GOARCH=wasm go build` line. A plain `main.go` with no placement (no `roles/deploy.json`) runs the same way, one process per grid position, all running the identical binary.
+`multicore` builds each role natively itself (no `GOOS`/`GOARCH` override) — there's no separate build step to run first, unlike `cmd/wasm`'s `GOOS=js GOARCH=wasm go build` line. A plain `main.go` with no placement (no `roles/placement.json`) runs the same way, one process per grid position, all running the identical binary.
 
 ## Core mapping: real on Linux, scheduler-only on macOS
 

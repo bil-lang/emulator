@@ -154,7 +154,7 @@ self.onmessage = (e) => {
 
   // Legacy bootstrap: role/identity told directly by the page, one
   // shared node.wasm fetched by every Worker itself -- still used by
-  // any program with no roles/deploy.json (see index.html's startGrid).
+  // any program with no roles/placement.json (see index.html's startGrid).
   self.bilRow = msg.row;
   self.bilCol = msg.col;
   self.bilRows = msg.rows;

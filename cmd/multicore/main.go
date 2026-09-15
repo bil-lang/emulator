@@ -5,7 +5,7 @@
 //
 // Unlike `bil emu` (the sibling bil repo's launcher), multicore expects a
 // nodeprog directory already built by bilc -- either a single main.go, or
-// roles/*/main.go + roles/deploy.json -- exactly the on-disk shape
+// roles/*/main.go + roles/placement.json -- exactly the on-disk shape
 // ../../README.md's Quickstart already produces. It does not invoke bilc
 // itself. See ./README.md for this backend's own quirks and quickstart.
 package main
@@ -123,13 +123,13 @@ func run(args []string) int {
 
 // prepare builds dir's node program(s) natively into buildDir, returning
 // each role's compiled binary path and a function that resolves which
-// role runs at a given grid position. A dir with roles/deploy.json builds
+// role runs at a given grid position. A dir with roles/placement.json builds
 // one binary per role subdirectory; a plain dir (a single main.go, no
 // placement) builds one binary that runs at every position.
 func prepare(dir, buildDir string, rows, cols int) (map[string]string, func(r, c int) (string, error), error) {
-	deployPath := filepath.Join(dir, "roles", "deploy.json")
-	if _, err := os.Stat(deployPath); err == nil {
-		m, err := loadManifest(deployPath)
+	placementPath := filepath.Join(dir, "roles", "placement.json")
+	if _, err := os.Stat(placementPath); err == nil {
+		m, err := loadManifest(placementPath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -154,7 +154,7 @@ func prepare(dir, buildDir string, rows, cols int) (map[string]string, func(r, c
 	}
 
 	if _, err := os.Stat(filepath.Join(dir, "main.go")); err != nil {
-		return nil, nil, fmt.Errorf("%s has neither roles/deploy.json nor main.go -- not a built nodeprog dir", dir)
+		return nil, nil, fmt.Errorf("%s has neither roles/placement.json nor main.go -- not a built nodeprog dir", dir)
 	}
 	out := filepath.Join(buildDir, "node")
 	if err := goBuildNative(dir, out); err != nil {

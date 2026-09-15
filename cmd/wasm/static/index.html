@@ -191,7 +191,7 @@
 
   // Small, purpose-built expression evaluator for the tiny grammar
   // bilc's placed-par clause-match/leaf-condition expressions actually
-  // use in roles/deploy.json: identifiers (r, c, rows, cols), int
+  // use in roles/placement.json: identifiers (r, c, rows, cols), int
   // literals, ==, !=, &&, +, -. Deliberately not eval()/Function() --
   // these strings come from this page's own trusted build output, but a
   // hand-rolled evaluator keeps the supported grammar explicit and
@@ -249,7 +249,7 @@
     return result;
   }
 
-  // resolveRole walks roles/deploy.json's leaves in order (matching
+  // resolveRole walks roles/placement.json's leaves in order (matching
   // switch/if-else "first match wins" semantics: non-default clauses
   // always precede default's own leaves, per parsePlacedParClauses's
   // own ordering) and returns the one proc that should run at (r,c), by
@@ -260,7 +260,7 @@
   // *)` partial wildcard) -- that dimension always matches, with no
   // expression to evaluate at all; a fully-wild clause (`default` or
   // `processor(*, *)`) is reported as `m.default` instead, never as
-  // row/col both "*" (see bilc's DeployManifest doc comment).
+  // row/col both "*" (see bilc's PlacementManifest doc comment).
   function resolveRole(leaves, r, c, rows, cols) {
     const vars = { r, c, rows, cols };
     for (const leaf of leaves) {
@@ -355,8 +355,8 @@
   // to run solely by relaying hop-by-hop across the spanning tree
   // bootChildCoords defines -- never told directly by this page the way
   // startGridLegacy tells every Worker outright. Used only when the
-  // current program has roles/deploy.json (built by bilc's
-  // RoleBinaries/DeployManifest); a program with no placed-par split
+  // current program has roles/placement.json (built by bilc's
+  // RoleBinaries/PlacementManifest); a program with no placed-par split
   // falls back to startGridLegacy entirely. See README.md.
   async function startGridCascade(rows, cols, nodeLinks, manifest, myGeneration) {
     const leaves = manifest.leaves;
@@ -434,13 +434,13 @@
     buildGridDOM(rows, cols);
 
     // Feature-detect per-role delivery: a program built with
-    // RoleBinaries/DeployManifest ships roles/deploy.json alongside its
+    // RoleBinaries/PlacementManifest ships roles/placement.json alongside its
     // node.wasm; a program with no placed-par split has neither, and
     // this page falls back to the legacy direct-postMessage bootstrap
     // entirely unchanged.
     let manifest = null;
     try {
-      const res = await fetch("roles/deploy.json");
+      const res = await fetch("roles/placement.json");
       if (res.ok) manifest = await res.json();
     } catch (e) { /* no cascade artifacts for this program -- legacy path */ }
     if (myGeneration !== spawnGeneration) return;

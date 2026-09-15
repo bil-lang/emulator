@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// manifest mirrors bilc.DeployManifest's JSON shape (see
-// ../../../bil/tools/bilc/bilc.go's DeployManifest doc comment) -- this is
+// manifest mirrors bilc.PlacementManifest's JSON shape (see
+// ../../../bil/tools/bilc/bilc.go's PlacementManifest doc comment) -- this is
 // the same on-disk file static/index.html's resolveRole reads for the
 // browser backend.
 type manifest struct {

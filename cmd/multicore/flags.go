@@ -21,7 +21,7 @@ func newFlagSet() *flagSet {
 // machine's core count), so there's little to infer, and requiring it
 // avoids duplicating bil emu's own inference logic in a second module.
 func (f *flagSet) parse(args []string) (dir string, rows, cols int, err error) {
-	dirFlag := f.fs.String("dir", "", "built nodeprog directory (a single main.go, or roles/*/main.go + roles/deploy.json)")
+	dirFlag := f.fs.String("dir", "", "built nodeprog directory (a single main.go, or roles/*/main.go + roles/placement.json)")
 	rowsFlag := f.fs.Int("rows", 0, "grid rows")
 	colsFlag := f.fs.Int("cols", 0, "grid cols")
 	f.fs.Usage = func() {
