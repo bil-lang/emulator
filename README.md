@@ -1,6 +1,6 @@
 # emulator
 
-A genuine (not simulated) software emulation environment for an NxM array of processors, built for the [Bil](../bil) language project. Two backends run the exact same node-program code over the exact same [`bilink`](bilink) link/channel primitive, but give it two different kinds of real hardware isolation:
+A software emulation environment for an NxM array of processors, built for the [Bil](../bil) language project. Two backends run the exact same node-program code over the exact same [`bilink`](bilink) link/channel primitive, but give it two different kinds of real hardware isolation:
 
 | | [`cmd/wasm`](cmd/wasm) | [`cmd/multicore`](cmd/multicore) |
 |---|---|---|
